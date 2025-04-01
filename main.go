@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"go-query/utils"
 	"log"
+
+	"github.com/charmbracelet/huh"
+	"github.com/jackc/pgx/v5"
 )
 
 func connect(connString string) (*pgx.Conn, error) {
@@ -25,9 +27,7 @@ func queryData(conn *pgx.Conn, query string) {
 	defer rows.Close()
 	utils.PrintRowsAsTable(rows)
 }
-func getNewConnection() (newString string) {
-	newConn := &utils.Params{}
-	utils.GetParamsFromUser(newConn)
+func getNewConnection(newConn utils.Params) (newString string) {
 	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", newConn.Username, newConn.Password, newConn.Host, newConn.Port, newConn.DB_name)
 	return connString
 }
@@ -41,10 +41,38 @@ func showOptions(choice *int) {
 	fmt.Scanln(choice)
 }
 func main() {
+	newConn := &utils.Params{}
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Enter the host").
+				Value(&newConn.Host),
+			huh.NewInput().
+				Title("Enter the port").
+				CharLimit(400).
+				Value(&newConn.Port),
+			huh.NewInput().
+				Title("Enter the Database Name").
+				CharLimit(400).
+				Value(&newConn.DB_name),
+			huh.NewInput().
+				Title("Enter the username").
+				CharLimit(400).
+				Value(&newConn.Username),
+			huh.NewInput().
+				Title("Enter the Password").
+				CharLimit(400).
+				Value(&newConn.Password),
+		),
+	)
+	formErr := form.Run()
+	if formErr != nil {
+		log.Fatal(formErr)
+	}
 	var database *pgx.Conn
 	var choice int = 0
 	var err error
-	connString := getNewConnection()
+	connString := getNewConnection(*newConn)
 	database, err = connect(connString)
 	if err != nil {
 		fmt.Println("An error has occured while opening the database")
