@@ -79,10 +79,18 @@ func main() {
 		return
 	}
 	for true {
+		var query string
 		showOptions(&choice)
 		if choice == 2 {
-			fmt.Println("Enter your query")
-			query := utils.ReadLines()
+			form := huh.NewForm(
+				huh.NewGroup(
+					huh.NewText().
+						Title("Enter your query").
+						Value(&query).
+						ShowLineNumbers(true),
+				),
+			)
+			form.Run()
 			queryData(database, query)
 			fmt.Println("")
 		} else if choice == 1 {
